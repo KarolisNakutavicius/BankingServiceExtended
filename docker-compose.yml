@@ -1,0 +1,8 @@
+version: "3.9"
+services: 
+    banking-service:
+        build: ./BankingServiceCRUD
+        volumes: 
+            - ./BankingServiceCRUD:\Users\karol\Documents>
+        ports:
+            - 80:80
