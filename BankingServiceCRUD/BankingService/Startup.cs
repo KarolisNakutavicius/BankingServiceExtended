@@ -43,8 +43,11 @@ namespace BankingService
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "BankingService", Version = "v1" });
             });
 
+            services.AddHttpClient();
+
             services.AddTransient<IBankAccountService, BankAccountService>();
             services.AddTransient<IStatementsService, StatementsService>();
+            services.AddTransient<IContactsService, ContactsService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

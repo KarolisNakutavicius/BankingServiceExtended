@@ -59,7 +59,7 @@ namespace BankingService.Services
             {
                 bankAccount = await _context.BankAccounts.FirstOrDefaultAsync(ba => ba.ClientID == id);
             }
-            catch
+            catch (Exception ex)
             {
                 //account was not found 
             }

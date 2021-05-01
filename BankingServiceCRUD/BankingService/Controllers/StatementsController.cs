@@ -10,11 +10,13 @@ using BankingService.Models.Entities;
 using BankingService.Services.Contracts;
 using BankingService.Models.DTOs;
 using BankingService.ViewModels;
+using System.Net.Http;
+using System.Net.Http.Json;
 
 namespace BankingService.Controllers
 {
-    [Route("BankAccounts/{accountID}/[controller]")]
-    [ApiController]
+    //[Route("BankAccounts/{accountID}/[controller]")]
+    //[ApiController]
     public class StatementsController : ControllerBase
     {
         private readonly IStatementsService _statementsService;
@@ -24,9 +26,9 @@ namespace BankingService.Controllers
             _statementsService = statementsService;
         }
 
-        [HttpPost]
+        //[HttpPost]
         public async Task<ActionResult<StatementViewModel>> CreateStatement(int accountID, StatementDTO newStatement)
-        {
+        {           
             var result = await _statementsService.CreateStatement(accountID, newStatement);
 
             if (!result.Success)
@@ -34,10 +36,10 @@ namespace BankingService.Controllers
                 return new JsonResult(result) { StatusCode = (int)result.StatusCode };
             }
 
-            return CreatedAtAction("GetStatement", new { accountID = accountID,  statementID = result.Value.StatementID }, new StatementViewModel(result.Value));
+            return CreatedAtAction("GetStatement", new { accountID = accountID,  statementID = result.Value.StatementID });
         }
 
-        [HttpGet]
+        //[HttpGet]
         public async Task<ActionResult<IEnumerable<StatementViewModel>>> GetStatements(int accountID)
         {
             var result = await _statementsService.GetStatements(accountID);
@@ -52,7 +54,7 @@ namespace BankingService.Controllers
             return Ok(statementsToReturn);
         }
 
-        [HttpGet("{statementID}")]
+        //[HttpGet("{statementID}")]
         public async Task<ActionResult<StatementViewModel>> GetStatement(int accountID, int statementID)
         {
             var result = await _statementsService.GetStatement(accountID, statementID);
@@ -65,7 +67,7 @@ namespace BankingService.Controllers
             return Ok(new StatementViewModel(result.Value));
         }
 
-        [HttpPut("{statementID}")]
+        //[HttpPut("{statementID}")]
         public async Task<IActionResult> PutStatement(int accountID, int statementID, StatementDTO updatedStatement)
         {
             var result = await _statementsService.UpdateStatement(accountID, statementID, updatedStatement);
@@ -78,7 +80,7 @@ namespace BankingService.Controllers
             return NoContent();           
         }
 
-        [HttpDelete("{statementID}")]
+        //[HttpDelete("{statementID}")]
         public async Task<IActionResult> DeleteStatement(int accountID, int statementID)
         {
             var result = await _statementsService.DeleteStatement(accountID, statementID);

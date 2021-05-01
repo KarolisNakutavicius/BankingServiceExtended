@@ -10,5 +10,6 @@ namespace BankingService.Models.Entities
         public string AccountName { get; set; }
         public string IBAN { get; set; }
         public IList<Statement> Statements { get; set; }
+        public List<int> ContactIds { get; set; }
     }
 }

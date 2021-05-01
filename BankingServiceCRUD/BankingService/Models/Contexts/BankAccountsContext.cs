@@ -1,9 +1,11 @@
 ﻿using BankingService.Enums;
 using BankingService.Models.Entities;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace BankingService.Models.Contexts
@@ -14,13 +16,20 @@ namespace BankingService.Models.Contexts
         public DbSet<Statement> Statements { get; set; }
 
         public BankAccountsContext(DbContextOptions<BankAccountsContext> options) : base(options)
-        { Database.EnsureCreated(); }
+        {
+            Database.EnsureCreated();
+        }
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<BankAccount>().Property(ba => ba.ClientID).ValueGeneratedOnAdd();
             modelBuilder.Entity<Statement>().Property(ba => ba.StatementID).ValueGeneratedOnAdd();
+
+            modelBuilder.Entity<BankAccount>().Property(ba => ba.ContactIds)
+                .HasConversion(
+                     v => JsonConvert.SerializeObject(v),
+                     v => JsonConvert.DeserializeObject<List<int>>(v));
 
             modelBuilder.Entity<Statement>()
                 .HasOne(s => s.BankAccount)
