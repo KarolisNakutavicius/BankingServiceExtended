@@ -6,8 +6,6 @@ services:
             - 5001:5000 
     banking-service:
         build: ./BankingServiceCRUD
-        volumes: 
-            - ./BankingServiceCRUD:\Users\karol\Documents\MountedApps
         ports:
             - 80:80
         depends_on:
