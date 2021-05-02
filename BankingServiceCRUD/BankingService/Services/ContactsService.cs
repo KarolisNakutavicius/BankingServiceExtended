@@ -28,7 +28,7 @@ namespace BankingService.Services
             _context = context;
             _accountService = bankAccountService;
             _httpClient = httpClient;
-            _httpClient.BaseAddress = new Uri("http://localhost:5000/");
+            _httpClient.BaseAddress = new Uri("http://contacts-service:5000/");
         }
 
         public async Task<Result<IList<Contact>>> GetAllContacts(int accountId)
