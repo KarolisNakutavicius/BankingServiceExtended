@@ -13,5 +13,7 @@ namespace BankingService.Services.Contracts
         Task<Result<IList<Contact>>> GetAllContacts(int accountId);
         Task<Result<Contact>> GetContact(int accountId, int contactId);
         Task<Result<Contact>> CreateContact(int accountId, Contact contactDTO);
+        Task<Result> UpdateContact(int accountID, int contactID, ContactDTO updatedContact);
+        Task<Result> DeleteContact(int accountID, int contactID);
     }
 }

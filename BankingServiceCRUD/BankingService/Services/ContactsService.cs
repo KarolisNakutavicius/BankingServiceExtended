@@ -113,5 +113,61 @@ namespace BankingService.Services
             return Result.Ok(contact);
         }
 
+        public async Task<Result> UpdateContact(int accountID, int contactID, ContactDTO updatedContact)
+        {
+            var result = await _accountService.GetAccount(accountID);
+
+            if (!result.Success)
+            {
+                return Result.Fail(result.StatusCode, result.Error);
+            }
+
+            BankAccount account = result.Value;
+
+            if (account.ContactIds == null || !account.ContactIds.Any(c => c == contactID))
+            {
+                return Result.Fail(HttpStatusCode.BadRequest, $"Account does not have a contact - {contactID}");
+            }
+
+            var response = await _httpClient.PutAsJsonAsync<ContactDTO>($"contacts/{contactID}", updatedContact);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var message = await response.Content.ReadAsStringAsync();
+                return Result.Fail<Contact>(response.StatusCode, message);
+            }
+
+            return Result.Ok();
+        }
+
+        public async Task<Result> DeleteContact(int accountID, int contactID)
+        {
+            var result = await _accountService.GetAccount(accountID);
+
+            if (!result.Success)
+            {
+                return Result.Fail(result.StatusCode, result.Error);
+            }
+
+            BankAccount account = result.Value;
+
+            if (account.ContactIds == null || !account.ContactIds.Any(c => c == contactID))
+            {
+                return Result.Fail(HttpStatusCode.BadRequest, $"Account does not have a contact - {contactID}");
+            }
+
+            var response = await _httpClient.DeleteAsync($"contacts/{contactID}");
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var message = await response.Content.ReadAsStringAsync();
+                return Result.Fail<Contact>(response.StatusCode, message);
+            }
+
+            account.ContactIds.Remove(contactID);
+
+            return Result.Ok();
+        }
+
     }
 }

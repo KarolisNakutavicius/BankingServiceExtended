@@ -65,43 +65,31 @@ namespace BankingService.Controllers
             return Ok(result.Value);
         }
 
-        //[HttpGet("{statementID}")]
-        //public async Task<ActionResult<StatementViewModel>> GetContact(int accountID, int statementID)
-        //{
-        //    var result = await _contactsService.GetStatement(accountID, statementID);
 
-        //    if (!result.Success)
-        //    {
-        //        return new JsonResult(result) { StatusCode = (int)result.StatusCode };
-        //    }
+        [HttpPut("{contactID}")]
+        public async Task<IActionResult> PutContact(int accountID, int contactID, ContactDTO updatedContact)
+        {
+            var result = await _contactsService.UpdateContact(accountID, contactID, updatedContact);
 
-        //    return Ok(new StatementViewModel(result.Value));
-        //}
+            if (!result.Success)
+            {
+                return new JsonResult(result) { StatusCode = (int)result.StatusCode };
+            }
 
-        //[HttpPut("{statementID}")]
-        //public async Task<IActionResult> PutStatement(int accountID, int statementID, StatementDTO updatedStatement)
-        //{
-        //    var result = await _contactsService.UpdateStatement(accountID, statementID, updatedStatement);
+            return NoContent();
+        }
 
-        //    if (!result.Success)
-        //    {
-        //        return new JsonResult(result) { StatusCode = (int)result.StatusCode };
-        //    }
+        [HttpDelete("{contactID}")]
+        public async Task<IActionResult> DeleteStatement(int accountID, int contactID)
+        {
+            var result = await _contactsService.DeleteContact(accountID, contactID);
 
-        //    return NoContent();
-        //}
+            if (!result.Success)
+            {
+                return new JsonResult(result) { StatusCode = (int)result.StatusCode };
+            }
 
-        //[HttpDelete("{statementID}")]
-        //public async Task<IActionResult> DeleteStatement(int accountID, int statementID)
-        //{
-        //    var result = await _contactsService.DeleteStatement(accountID, statementID);
-
-        //    if (!result.Success)
-        //    {
-        //        return new JsonResult(result) { StatusCode = (int)result.StatusCode };
-        //    }
-
-        //    return NoContent();
-        //}
+            return NoContent();
+        }
     }
 }
