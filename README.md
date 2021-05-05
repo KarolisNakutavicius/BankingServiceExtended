@@ -10,6 +10,4 @@ Banking service which saves array of contacts inside bank account by using `cont
 
 Open `localhost/swagger` to manipulate data
 
-`localhost:5001/contacts` to manipulate data of contacts
-
 
