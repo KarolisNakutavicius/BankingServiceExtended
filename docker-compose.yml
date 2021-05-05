@@ -2,8 +2,6 @@ version: "3.9"
 services:          
     contacts-service:
         build: ./contacts
-        ports:
-            - 5001:5000 
     banking-service:
         build: ./BankingServiceCRUD
         ports:
