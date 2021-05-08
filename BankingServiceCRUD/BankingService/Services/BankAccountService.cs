@@ -137,29 +137,15 @@ namespace BankingService.Services
                 ContactIds = new List<int>()
             };
 
-            //Result result = null;
-
-            //foreach (var contact in newAccount.Contacts)
-            //{
-            //    if (currentAccount.ContactIds.Contains(contact.Id))
-            //    {
-            //        result = await _contactsService.UpdateContact(contact);
-            //    }
-            //    else
-            //    {
-            //        result = await _contactsService.CreateContact(contact);
-            //    }
-
-            //    if (!result.Success)
-            //    {
-            //        return result;
-            //    }
-
-            //    updatedAccount.ContactIds.Add(contact.Id);
-            //}
+            var result = await UpdateContacts(newAccount.Contacts, currentAccount, updatedAccount);
+            if (!result.Success)
+            {
+                return result;
+            }
 
             try
             {
+                _context.Entry(currentAccount).State = EntityState.Detached;
                 _context.Entry(updatedAccount).State = EntityState.Modified;
                 await _context.SaveChangesAsync();
             }
@@ -173,6 +159,38 @@ namespace BankingService.Services
                 {
                     return Result.Fail(HttpStatusCode.InternalServerError, "Unexpected server error while updating an account");
                 }
+            }
+
+            return Result.Ok();
+        }
+
+        private async Task<Result> UpdateContacts(List<Contact> contacts, BankAccount currentAccount, BankAccount updatedAccount)
+        {
+            Result result = null;
+
+            foreach (var contact in contacts)
+            {
+                if (currentAccount.ContactIds.Contains(contact.Id))
+                {
+                    result = await _contactsService.UpdateContact(contact);
+                    currentAccount.ContactIds.Remove(contact.Id);
+                }
+                else
+                {
+                    result = await _contactsService.CreateContact(contact);
+                }
+
+                if (!result.Success)
+                {
+                    return result;
+                }
+
+                updatedAccount.ContactIds.Add(contact.Id);
+            }
+
+            foreach (int contactId in currentAccount.ContactIds)
+            {
+                await _contactsService.DeleteContact(contactId);
             }
 
             return Result.Ok();
