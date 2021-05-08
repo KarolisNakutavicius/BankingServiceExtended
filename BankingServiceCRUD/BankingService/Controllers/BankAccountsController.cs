@@ -34,13 +34,14 @@ namespace BankingService.Controllers
                 return new JsonResult(result) { StatusCode = (int)result.StatusCode };
             }
 
-            return CreatedAtAction("GetBankAccount", new { id = result.Value.ClientID }, new BankAccountViewModel(result.Value));
+            return CreatedAtAction("GetBankAccount", new { id = result.Value.ClientID }, result.Value);
         }
 
         [HttpGet]
         public async Task<ActionResult<IEnumerable<BankAccountViewModel>>> GetBankAccounts()
         {
-            return (await _bankAccountService.GetAccounts()).Value.Select(b => new BankAccountViewModel(b)).ToList();
+            var accounts = await _bankAccountService.GetAccounts();
+            return Ok(accounts);
         }
 
         [HttpGet("{id}")]
@@ -53,7 +54,7 @@ namespace BankingService.Controllers
                 return new JsonResult(result) { StatusCode = (int)result.StatusCode };
             }
 
-            return Ok(new BankAccountViewModel(result.Value));
+            return Ok(result.Value);
         }
 
         [HttpPut("{id}")]

@@ -46,7 +46,6 @@ namespace BankingService
             services.AddHttpClient();
 
             services.AddTransient<IBankAccountService, BankAccountService>();
-            services.AddTransient<IStatementsService, StatementsService>();
             services.AddTransient<IContactsService, ContactsService>();
         }
 

@@ -18,40 +18,39 @@ namespace BankingService.Services
     public class BankAccountService : IBankAccountService
     {
         private readonly BankAccountsContext _context;
-        public BankAccountService(BankAccountsContext context)
+        private readonly IContactsService _contactsService;
+
+        public BankAccountService(BankAccountsContext context,
+            IContactsService contactsService)
         {
             _context = context;
+            _contactsService = contactsService;
         }
 
-        public async Task<ActionResult<IEnumerable<BankAccount>>> GetAccounts()
+        public async Task<IEnumerable<BankAccountViewModel>> GetAccounts()
         {
-            return await _context.BankAccounts.ToListAsync();
-        }
+            IList<BankAccount> accounts = await _context.BankAccounts.ToListAsync();
 
-        public async Task<Result<BankAccount>> CreateAccount(BankAccountDTO account)
-        {
-            var newAccount = new BankAccount()
-            {
-                AccountName = account.AccountName,
-                IBAN = account.IBAN
-            };
+            IList<BankAccountViewModel> accountsWithContacts = new List<BankAccountViewModel>();
 
-            _context.BankAccounts.Add(newAccount);
+            foreach (var account in accounts)
+            {
+                var contacts = await _contactsService.GetAllContacts(account);
 
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateException)
-            {
-                return Result.Fail<BankAccount>(HttpStatusCode.InternalServerError, "Unexpected server error while saving new account");
+                var accountViewModel = new BankAccountViewModel(account);
+
+                if (contacts.Success)
+                {
+                    accountViewModel.Contacts = contacts.Value;
+                }
+
+                accountsWithContacts.Add(accountViewModel);
             }
 
-            return Result.Ok(newAccount);
-
+            return accountsWithContacts;
         }
 
-        public async Task<Result<BankAccount>> GetAccount(int id)
+        public async Task<Result<BankAccountViewModel>> GetAccount(int id)
         {
             BankAccount bankAccount = null;
 
@@ -66,20 +65,98 @@ namespace BankingService.Services
 
             if (bankAccount == null)
             {
-                return Result.Fail<BankAccount>(HttpStatusCode.NotFound, "Bank account was not found");
+                return Result.Fail<BankAccountViewModel>(HttpStatusCode.NotFound, "Bank account was not found");
             }
 
-            return Result.Ok(bankAccount);
+            var accountViewModel = new BankAccountViewModel(bankAccount);
+
+            var contacts = await _contactsService.GetAllContacts(bankAccount);
+
+            if (contacts.Success)
+            {
+                accountViewModel.Contacts = contacts.Value;
+            }
+
+            return Result.Ok(accountViewModel);
+        }
+
+        public async Task<Result<BankAccountViewModel>> CreateAccount(BankAccountDTO account)
+        {
+            var newAccount = new BankAccount()
+            {
+                AccountName = account.AccountName,
+                IBAN = account.IBAN,
+                ContactIds = new List<int>()
+            };
+
+            if (account.Contacts != null)
+            {
+                foreach (var contact in account.Contacts)
+                {
+                    var result = await _contactsService.CreateContact(contact);
+
+                    if (!result.Success)
+                    {
+                        return Result.Fail<BankAccountViewModel>(result.StatusCode, result.Error);
+                    }
+
+                    newAccount.ContactIds.Add(contact.Id);
+                }
+            }
+
+            _context.BankAccounts.Add(newAccount);
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateException)
+            {
+                return Result.Fail<BankAccountViewModel>(HttpStatusCode.InternalServerError, "Unexpected server error while saving new account");
+            }
+
+            var viewModel = new BankAccountViewModel(newAccount);
+
+            viewModel.Contacts = account.Contacts != null ?
+                account.Contacts :
+                new List<Contact>();
+
+
+            return Result.Ok(viewModel);
         }
 
         public async Task<Result> UpdateAccount(int id, BankAccountDTO newAccount)
         {
+            var currentAccount = await _context.BankAccounts.FirstOrDefaultAsync(ba => ba.ClientID == id);
+
             var updatedAccount = new BankAccount()
             {
                 ClientID = id,
                 AccountName = newAccount.AccountName,
-                IBAN = newAccount.IBAN
+                IBAN = newAccount.IBAN,
+                ContactIds = new List<int>()
             };
+
+            //Result result = null;
+
+            //foreach (var contact in newAccount.Contacts)
+            //{
+            //    if (currentAccount.ContactIds.Contains(contact.Id))
+            //    {
+            //        result = await _contactsService.UpdateContact(contact);
+            //    }
+            //    else
+            //    {
+            //        result = await _contactsService.CreateContact(contact);
+            //    }
+
+            //    if (!result.Success)
+            //    {
+            //        return result;
+            //    }
+
+            //    updatedAccount.ContactIds.Add(contact.Id);
+            //}
 
             try
             {
@@ -117,6 +194,16 @@ namespace BankingService.Services
             if (bankAccount == null)
             {
                 return Result.Fail<BankAccountViewModel>(HttpStatusCode.NotFound, "Bank account was not found");
+            }
+
+            foreach (int contactId in bankAccount.ContactIds)
+            {
+                var result = await _contactsService.DeleteContact(contactId);
+
+                if (!result.Success)
+                {
+                    return Result.Fail<BankAccountViewModel>(result.StatusCode, result.Error);
+                }
             }
 
             try

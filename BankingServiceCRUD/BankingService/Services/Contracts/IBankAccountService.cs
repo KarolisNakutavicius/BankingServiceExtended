@@ -1,6 +1,7 @@
 ﻿using BankingService.Functional;
 using BankingService.Models.DTOs;
 using BankingService.Models.Entities;
+using BankingService.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
@@ -11,9 +12,9 @@ namespace BankingService.Services.Contracts
 {
     public interface IBankAccountService
     {
-        Task<Result<BankAccount>> CreateAccount(BankAccountDTO newAccount);
-        Task<ActionResult<IEnumerable<BankAccount>>> GetAccounts();
-        Task<Result<BankAccount>> GetAccount(int id);
+        Task<Result<BankAccountViewModel>> CreateAccount(BankAccountDTO newAccount);
+        Task<IEnumerable<BankAccountViewModel>> GetAccounts();
+        Task<Result<BankAccountViewModel>> GetAccount(int id);
         Task<Result> UpdateAccount(int id, BankAccountDTO newAccount);
         Task<Result> DeleteAccount(int id);
 

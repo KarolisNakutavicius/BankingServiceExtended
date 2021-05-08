@@ -11,6 +11,7 @@ namespace BankingService.ViewModels
         public int ClientID { get; set; }
         public string AccountName { get; set; }
         public string IBAN { get; set; }
+        public List<Contact> Contacts { get; set; }
 
         public BankAccountViewModel(BankAccount bankAccount)
         {

@@ -10,10 +10,10 @@ namespace BankingService.Services.Contracts
 {
     public interface IContactsService
     {
-        Task<Result<IList<Contact>>> GetAllContacts(int accountId);
-        Task<Result<Contact>> GetContact(int accountId, int contactId);
-        Task<Result<Contact>> CreateContact(int accountId, Contact contactDTO);
-        Task<Result> UpdateContact(int accountID, int contactID, ContactDTO updatedContact);
-        Task<Result> DeleteContact(int accountID, int contactID);
+        Task<Result<List<Contact>>> GetAllContacts(BankAccount bankAccount);
+        Task<Result<Contact>> GetContact(int contactId);
+        Task<Result<Contact>> CreateContact(Contact contact);
+        Task<Result> UpdateContact(Contact updatedContact);
+        Task<Result> DeleteContact(int contactID);
     }
 }

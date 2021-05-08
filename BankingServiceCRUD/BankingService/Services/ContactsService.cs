@@ -17,51 +17,39 @@ namespace BankingService.Services
     public class ContactsService : IContactsService
     {
         private readonly BankAccountsContext _context;
-        private readonly IBankAccountService _accountService;
         private readonly HttpClient _httpClient;
 
         public ContactsService(
             BankAccountsContext context,
-            IBankAccountService bankAccountService,
             HttpClient httpClient)
         {
             _context = context;
-            _accountService = bankAccountService;
             _httpClient = httpClient;
-            _httpClient.BaseAddress = new Uri("http://contacts-service:5000/");
+            _httpClient.BaseAddress = new Uri("http://localhost:5000/");
         }
 
-        public async Task<Result<IList<Contact>>> GetAllContacts(int accountId)
+        public async Task<Result<List<Contact>>> GetAllContacts(BankAccount account)
         {
-            var result = await _accountService.GetAccount(accountId);
+            List<Contact> contacts = new List<Contact>();
 
-            if (!result.Success)
+            try
             {
-                return Result.Fail<IList<Contact>>(result.StatusCode, result.Error);
+                foreach (int contactId in account.ContactIds)
+                {
+                    Contact contact = await _httpClient.GetFromJsonAsync<Contact>($"contacts/{contactId}");
+                    contacts.Add(contact);
+                }
             }
-
-            BankAccount account = result.Value;
-
-            IList<Contact> contacts = new List<Contact>();
-
-            foreach(int contactId in account.ContactIds)
+            catch
             {
-                Contact contact = await _httpClient.GetFromJsonAsync<Contact>($"contacts/{contactId}");
-                contacts.Add(contact);
+                //do nothing
             }
 
             return Result.Ok(contacts);
         }
 
-        public async Task<Result<Contact>> CreateContact(int accountId, Contact contact)
+        public async Task<Result<Contact>> CreateContact(Contact contact)
         {
-            var result = await _accountService.GetAccount(accountId);
-
-            if (!result.Success)
-            {
-                return Result.Fail<Contact>(result.StatusCode, result.Error);
-            }
-
             var contactCreationResponse = await _httpClient.PostAsJsonAsync<Contact>("contacts", contact);
 
             if (!contactCreationResponse.IsSuccessStatusCode)
@@ -70,36 +58,11 @@ namespace BankingService.Services
                 return Result.Fail<Contact>(contactCreationResponse.StatusCode, message);
             }
 
-            try
-            {
-                BankAccount account = result.Value;
-
-                if (account.ContactIds == null)
-                {
-                    account.ContactIds = new List<int>();
-                }
-
-                account.ContactIds.Add((int)contact.Id);
-                _context.Entry(account).State = EntityState.Modified;
-                await _context.SaveChangesAsync();
-            }
-            catch (Exception ex)
-            {
-                return Result.Fail<Contact>(HttpStatusCode.InternalServerError, "Unexpected server error while updating an account");
-            }
-
             return Result.Ok((Contact)contact);
         }
 
-        public async Task<Result<Contact>> GetContact(int accountId, int contactId)
+        public async Task<Result<Contact>> GetContact(int contactId)
         {
-            var result = await _accountService.GetAccount(accountId);
-
-            if (!result.Success)
-            {
-                return Result.Fail<Contact>(result.StatusCode, result.Error);
-            }
-
             var response = await _httpClient.GetAsync($"contacts/{contactId}");
 
             if (!response.IsSuccessStatusCode)
@@ -113,23 +76,9 @@ namespace BankingService.Services
             return Result.Ok(contact);
         }
 
-        public async Task<Result> UpdateContact(int accountID, int contactID, ContactDTO updatedContact)
+        public async Task<Result> UpdateContact(Contact updatedContact)
         {
-            var result = await _accountService.GetAccount(accountID);
-
-            if (!result.Success)
-            {
-                return Result.Fail(result.StatusCode, result.Error);
-            }
-
-            BankAccount account = result.Value;
-
-            if (account.ContactIds == null || !account.ContactIds.Any(c => c == contactID))
-            {
-                return Result.Fail(HttpStatusCode.BadRequest, $"Account does not have a contact - {contactID}");
-            }
-
-            var response = await _httpClient.PutAsJsonAsync<ContactDTO>($"contacts/{contactID}", updatedContact);
+            var response = await _httpClient.PutAsJsonAsync<Contact>($"contacts/{updatedContact.Id}", updatedContact);
 
             if (!response.IsSuccessStatusCode)
             {
@@ -140,22 +89,8 @@ namespace BankingService.Services
             return Result.Ok();
         }
 
-        public async Task<Result> DeleteContact(int accountID, int contactID)
+        public async Task<Result> DeleteContact(int contactID)
         {
-            var result = await _accountService.GetAccount(accountID);
-
-            if (!result.Success)
-            {
-                return Result.Fail(result.StatusCode, result.Error);
-            }
-
-            BankAccount account = result.Value;
-
-            if (account.ContactIds == null || !account.ContactIds.Any(c => c == contactID))
-            {
-                return Result.Fail(HttpStatusCode.BadRequest, $"Account does not have a contact - {contactID}");
-            }
-
             var response = await _httpClient.DeleteAsync($"contacts/{contactID}");
 
             if (!response.IsSuccessStatusCode)
@@ -163,8 +98,6 @@ namespace BankingService.Services
                 var message = await response.Content.ReadAsStringAsync();
                 return Result.Fail<Contact>(response.StatusCode, message);
             }
-
-            account.ContactIds.Remove(contactID);
 
             return Result.Ok();
         }

@@ -11,5 +11,7 @@ namespace BankingService.Models.DTOs
         public string AccountName { get; set; }
 
         public string IBAN { get; set; }
+
+        public List<Contact> Contacts { get; set;}
     }
 }
