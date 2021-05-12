@@ -50,13 +50,20 @@ namespace BankingService.Services
 
         public async Task<Result<Contact>> CreateContact(Contact contact)
         {
-            var contactCreationResponse = await _httpClient.PostAsJsonAsync<Contact>("contacts", contact);
-
-            if (!contactCreationResponse.IsSuccessStatusCode)
+            try
             {
-                var message = await contactCreationResponse.Content.ReadAsStringAsync();
-                return Result.Fail<Contact>(contactCreationResponse.StatusCode, message);
+                var contactCreationResponse = await _httpClient.PostAsJsonAsync<Contact>("contacts", contact);
+                if (!contactCreationResponse.IsSuccessStatusCode)
+                {
+                    var message = await contactCreationResponse.Content.ReadAsStringAsync();
+                    return Result.Fail<Contact>(contactCreationResponse.StatusCode, message);
+                }
             }
+            catch (Exception ex)
+            {
+                return Result.Fail<Contact>(HttpStatusCode.InternalServerError, "Could not create contact. Contacts api cannot be reached");
+            }
+
 
             return Result.Ok((Contact)contact);
         }
